@@ -147,4 +147,8 @@ Testler GitHub Actions üzerinde her push'ta Windows'ta otomatik çalışıyor (
 
 ## Öğrenci
 
-**Yunus Emre Özen**
+| | |
+|---|---|
+| Ad Soyad | **Yunus Emre Özen** |
+| Öğrenci No | **215542001** |
+| Ders | YMH219 Nesne Tabanlı Programlama |
