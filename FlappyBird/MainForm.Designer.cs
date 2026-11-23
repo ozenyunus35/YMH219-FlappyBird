@@ -35,6 +35,7 @@ partial class MainForm
         oyunAlani = new Kontroller.OyunAlani();
         durumCubugu = new StatusStrip();
         lblDurum = new ToolStripStatusLabel();
+        lblSes = new ToolStripStatusLabel();
         oyunZamanlayici = new System.Windows.Forms.Timer(components);
         ustPanel.SuspendLayout();
         durumCubugu.SuspendLayout();
@@ -151,7 +152,7 @@ partial class MainForm
         //
         // durumCubugu
         //
-        durumCubugu.Items.AddRange(new ToolStripItem[] { lblDurum });
+        durumCubugu.Items.AddRange(new ToolStripItem[] { lblDurum, lblSes });
         durumCubugu.Location = new Point(0, 612);
         durumCubugu.Name = "durumCubugu";
         durumCubugu.Size = new Size(420, 22);
@@ -161,8 +162,17 @@ partial class MainForm
         // lblDurum
         //
         lblDurum.Name = "lblDurum";
-        lblDurum.Size = new Size(48, 17);
+        lblDurum.Size = new Size(328, 17);
+        lblDurum.Spring = true;
         lblDurum.Text = "Hazır";
+        lblDurum.TextAlign = ContentAlignment.MiddleLeft;
+        // 
+        // lblSes
+        // 
+        lblSes.ForeColor = Color.DimGray;
+        lblSes.Name = "lblSes";
+        lblSes.Size = new Size(77, 17);
+        lblSes.Text = "Ses: Açık (M)";
         //
         // oyunZamanlayici
         //
@@ -207,5 +217,6 @@ partial class MainForm
     private Kontroller.OyunAlani oyunAlani;
     private StatusStrip durumCubugu;
     private ToolStripStatusLabel lblDurum;
+    private ToolStripStatusLabel lblSes;
     private System.Windows.Forms.Timer oyunZamanlayici;
 }

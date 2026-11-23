@@ -23,6 +23,7 @@ public class OyunAlani : Control
     private readonly Font skorFontu = new("Segoe UI", 40, FontStyle.Bold);
     private readonly Font baslikFontu = new("Segoe UI", 26, FontStyle.Bold);
     private readonly Font bilgiFontu = new("Segoe UI", 12, FontStyle.Regular);
+    private readonly Font geriSayimFontu = new("Segoe UI", 72, FontStyle.Bold);
 
     // Bulutların yeri sabit, sadece kayma miktarı değişiyor
     private readonly PointF[] bulutlar =
@@ -203,7 +204,7 @@ public class OyunAlani : Control
 
     private void UstBilgiyiCiz(Graphics g, OyunMotoru motor)
     {
-        if (motor.Durum is OyunDurumu.Oynaniyor or OyunDurumu.Duraklatildi)
+        if (motor.Durum is OyunDurumu.Oynaniyor or OyunDurumu.Duraklatildi or OyunDurumu.GeriSayim)
             GolgeliYazi(g, motor.Skor.ToString(), skorFontu, new RectangleF(0, 30, OyunMotoru.AlanGenisligi, 70), ortala);
 
         switch (motor.Durum)
@@ -211,7 +212,7 @@ public class OyunAlani : Control
             case OyunDurumu.Hazir:
                 Panel(g, new RectangleF(70, 150, 340, 130));
                 GolgeliYazi(g, "HAZIR MISIN?", baslikFontu, new RectangleF(70, 165, 340, 50), ortala);
-                GolgeliYazi(g, "Boşluk / ↑ veya fare tıkı ile zıpla\nP: duraklat   R: yeniden başlat",
+                GolgeliYazi(g, "Boşluk / ↑ / fare tıkı: zıpla\nP: duraklat   R: yeni oyun   M: ses",
                             bilgiFontu, new RectangleF(70, 215, 340, 60), ortala);
                 break;
 
@@ -221,6 +222,12 @@ public class OyunAlani : Control
                 GolgeliYazi(g, "Devam etmek için P", bilgiFontu, new RectangleF(70, 307, 340, 30), ortala);
                 break;
 
+            case OyunDurumu.GeriSayim:
+                GolgeliYazi(g, motor.GeriSayimSaniye.ToString(), geriSayimFontu,
+                            new RectangleF(0, 220, OyunMotoru.AlanGenisligi, 130), ortala);
+                GolgeliYazi(g, "Hazırlan!", bilgiFontu, new RectangleF(0, 350, OyunMotoru.AlanGenisligi, 30), ortala);
+                break;
+
             case OyunDurumu.Bitti:
                 Panel(g, new RectangleF(60, 160, 360, 230));
                 GolgeliYazi(g, "GAME OVER", baslikFontu, new RectangleF(60, 175, 360, 50), ortala);
@@ -228,10 +235,36 @@ public class OyunAlani : Control
                     GolgeliYazi(g, "YENİ REKOR!", bilgiFontu, new RectangleF(60, 225, 360, 25), ortala);
                 string sonuc = $"Skor: {motor.Skor}      Rekor: {Math.Max(Rekor, motor.Skor)}\n" +
                                $"Seviye: {motor.Seviye}   Zorluk: {motor.Zorluk}";
-                GolgeliYazi(g, sonuc, bilgiFontu, new RectangleF(60, 262, 360, 60), ortala);
+                GolgeliYazi(g, sonuc, bilgiFontu, new RectangleF(60, 258, 360, 50), ortala);
+                MadalyaCiz(g, motor.Madalya, new PointF(240, 318));
                 GolgeliYazi(g, "Yeniden oynamak için R veya Enter", bilgiFontu, new RectangleF(60, 340, 360, 30), ortala);
                 break;
         }
+    }
+
+    private void MadalyaCiz(Graphics g, Madalya madalya, PointF merkez)
+    {
+        Color renk = madalya switch
+        {
+            Madalya.Bronz => Color.FromArgb(205, 127, 50),
+            Madalya.Gumus => Color.FromArgb(200, 205, 215),
+            Madalya.Altin => Color.FromArgb(255, 205, 60),
+            _ => Color.FromArgb(90, 255, 255, 255)
+        };
+
+        string yazi = madalya == Madalya.Yok
+            ? $"Madalya için {MadalyaHesaplayici.BronzSiniri} puan gerekli"
+            : $"{MadalyaHesaplayici.Ad(madalya)} madalya";
+
+        SizeF boyut = g.MeasureString(yazi, bilgiFontu);
+        float toplam = 24 + 8 + boyut.Width;
+        float x = merkez.X - toplam / 2;
+
+        using var firca = new SolidBrush(renk);
+        using var kenar = new Pen(Color.FromArgb(120, 0, 0, 0), 2);
+        g.FillEllipse(firca, x, merkez.Y - 12, 24, 24);
+        g.DrawEllipse(kenar, x, merkez.Y - 12, 24, 24);
+        GolgeliYazi(g, yazi, bilgiFontu, new RectangleF(x + 32, merkez.Y - boyut.Height / 2, boyut.Width + 4, boyut.Height), StringFormat.GenericDefault);
     }
 
     private static void Panel(Graphics g, RectangleF alan)
@@ -271,6 +304,7 @@ public class OyunAlani : Control
             skorFontu.Dispose();
             baslikFontu.Dispose();
             bilgiFontu.Dispose();
+            geriSayimFontu.Dispose();
         }
         base.Dispose(disposing);
     }

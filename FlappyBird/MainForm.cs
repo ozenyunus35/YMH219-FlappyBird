@@ -11,6 +11,7 @@ public partial class MainForm : Form
 
     // Tuşa basılı tutunca sürekli zıplamasın diye (KeyDown tekrar tekrar geliyor)
     private bool ziplamaTusuBasili;
+    private bool sesAcik = true;
 
     public MainForm()
     {
@@ -85,6 +86,12 @@ public partial class MainForm : Form
                 e.Handled = true;
                 break;
 
+            case Keys.M:
+                sesAcik = !sesAcik;
+                lblSes.Text = sesAcik ? "Ses: Açık (M)" : "Ses: Kapalı (M)";
+                e.Handled = true;
+                break;
+
             case Keys.R:
                 YeniOyunBaslat();
                 e.Handled = true;
@@ -114,8 +121,7 @@ public partial class MainForm : Form
     private void MainForm_Deactivate(object? sender, EventArgs e)
     {
         ziplamaTusuBasili = false;
-        if (motor.Durum == OyunDurumu.Oynaniyor)
-            motor.DuraklatVeyaDevamEt();
+        motor.Duraklat();
     }
 
     // ---------- Butonlar ----------
@@ -161,10 +167,13 @@ public partial class MainForm : Form
         oyunAlani.YeniRekor = yeniRekor;
         BilgileriGuncelle();
 
-        if (yeniRekor)
-            SystemSounds.Asterisk.Play();
-        else
-            SystemSounds.Hand.Play();
+        if (sesAcik)
+        {
+            if (yeniRekor)
+                SystemSounds.Asterisk.Play();
+            else
+                SystemSounds.Hand.Play();
+        }
 
         if (rekorDeposu.SonHata is not null)
             lblDurum.Text = rekorDeposu.SonHata;
@@ -187,11 +196,12 @@ public partial class MainForm : Form
             OyunDurumu.Hazir => "Hazır - başlamak için Boşluk tuşuna bas",
             OyunDurumu.Oynaniyor => "Oyun devam ediyor",
             OyunDurumu.Duraklatildi => "Duraklatıldı (P ile devam)",
+            OyunDurumu.GeriSayim => "Oyun birazdan devam edecek...",
             OyunDurumu.Bitti => "Oyun bitti - R / Enter ile yeniden başla",
             _ => ""
         };
 
-        btnDuraklat.Enabled = motor.Durum is OyunDurumu.Oynaniyor or OyunDurumu.Duraklatildi;
+        btnDuraklat.Enabled = motor.Durum is OyunDurumu.Oynaniyor or OyunDurumu.Duraklatildi or OyunDurumu.GeriSayim;
         btnDuraklat.Text = motor.Durum == OyunDurumu.Duraklatildi ? "Devam" : "Duraklat";
     }
 }

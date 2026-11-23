@@ -15,9 +15,10 @@ public class OyunMotoru
     private const int HizArtisAraligi = 5;      // her 5 puanda bir hızlanır
     private const float HizArtisMiktari = 0.35f;
     private const int MaksimumBoslukFarki = 150;
+    public const int GeriSayimTickSayisi = 180;  // 3 saniye (saniyede 60 adım)
 
     private readonly List<Boru> borular = new();
-    private readonly Random rastgele = new();
+    private readonly Random rastgele;
     private ZorlukAyari ayar;
 
     public Kus Kus { get; }
@@ -33,12 +34,22 @@ public class OyunMotoru
 
     public float ZeminY => AlanYuksekligi - ZeminYuksekligi;
 
+    // Duraklatmadan dönünce kalan geri sayım (tick cinsinden)
+    public int GeriSayimKalan { get; private set; }
+    public int GeriSayimSaniye => (GeriSayimKalan + 59) / 60;
+
+    public Madalya Madalya => MadalyaHesaplayici.Hesapla(Skor);
+
     public event EventHandler? SkorDegisti;
     public event EventHandler? DurumDegisti;
     public event EventHandler? OyunBitti;
 
-    public OyunMotoru(ZorlukSeviyesi zorluk)
+    public OyunMotoru(ZorlukSeviyesi zorluk) : this(zorluk, null) { }
+
+    /// <param name="tohum">Testlerde aynı boru dizilimini elde etmek için sabit bir sayı verilebilir.</param>
+    public OyunMotoru(ZorlukSeviyesi zorluk, int? tohum)
     {
+        rastgele = tohum is int t ? new Random(t) : new Random();
         Kus = new Kus(110, 280);
         ayar = ZorlukAyari.Getir(zorluk);
         YeniOyun(zorluk);
@@ -49,6 +60,7 @@ public class OyunMotoru
         Zorluk = zorluk;
         ayar = ZorlukAyari.Getir(zorluk);
         Skor = 0;
+        GeriSayimKalan = 0;
         Hiz = ayar.BaslangicHizi;
         Kus.Sifirla();
 
@@ -75,12 +87,33 @@ public class OyunMotoru
             Kus.KanatCirp(ayar.ZiplamaGucu);
     }
 
+    /// <summary>
+    /// Oyun sırasında duraklatır. Duraklatılmışsa hemen başlatmıyor,
+    /// oyuncu hazırlansın diye önce 3 saniyelik geri sayım yapıyor.
+    /// </summary>
     public void DuraklatVeyaDevamEt()
     {
-        if (Durum == OyunDurumu.Oynaniyor)
+        switch (Durum)
+        {
+            case OyunDurumu.Oynaniyor:
+            case OyunDurumu.GeriSayim:
+                Duraklat();
+                break;
+
+            case OyunDurumu.Duraklatildi:
+                GeriSayimKalan = GeriSayimTickSayisi;
+                DurumuDegistir(OyunDurumu.GeriSayim);
+                break;
+        }
+    }
+
+    public void Duraklat()
+    {
+        if (Durum is OyunDurumu.Oynaniyor or OyunDurumu.GeriSayim)
+        {
+            GeriSayimKalan = 0;
             DurumuDegistir(OyunDurumu.Duraklatildi);
-        else if (Durum == OyunDurumu.Duraklatildi)
-            DurumuDegistir(OyunDurumu.Oynaniyor);
+        }
     }
 
     /// <summary>Timer her tetiklendiğinde bir kare ilerletir.</summary>
@@ -90,6 +123,14 @@ public class OyunMotoru
             return;
 
         TickSayisi++;
+
+        if (Durum == OyunDurumu.GeriSayim)
+        {
+            GeriSayimKalan--;
+            if (GeriSayimKalan <= 0)
+                DurumuDegistir(OyunDurumu.Oynaniyor);
+            return;
+        }
 
         if (Durum != OyunDurumu.Oynaniyor)
             return;
