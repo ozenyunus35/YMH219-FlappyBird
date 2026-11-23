@@ -1,10 +1,13 @@
+using System.Media;
 using FlappyBird.Oyun;
+using FlappyBird.Veri;
 
 namespace FlappyBird;
 
 public partial class MainForm : Form
 {
     private readonly OyunMotoru motor;
+    private readonly RekorDeposu rekorDeposu = new();
 
     // Tuşa basılı tutunca sürekli zıplamasın diye (KeyDown tekrar tekrar geliyor)
     private bool ziplamaTusuBasili;
@@ -16,6 +19,7 @@ public partial class MainForm : Form
         motor = new OyunMotoru(ZorlukSeviyesi.Normal);
         motor.SkorDegisti += Motor_SkorDegisti;
         motor.DurumDegisti += Motor_DurumDegisti;
+        motor.OyunBitti += Motor_OyunBitti;
 
         foreach (ZorlukSeviyesi seviye in Enum.GetValues<ZorlukSeviyesi>())
             cmbZorluk.Items.Add(seviye);
@@ -28,12 +32,24 @@ public partial class MainForm : Form
         oyunZamanlayici.Start();
     }
 
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+
+        if (rekorDeposu.SonHata is not null)
+        {
+            MessageBox.Show(rekorDeposu.SonHata + "\nRekorlar bu oturumda sıfırdan başlayacak.",
+                "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+        }
+    }
+
     private ZorlukSeviyesi SeciliZorluk =>
         cmbZorluk.SelectedItem is ZorlukSeviyesi seviye ? seviye : ZorlukSeviyesi.Normal;
 
     private void YeniOyunBaslat()
     {
         motor.YeniOyun(SeciliZorluk);
+        oyunAlani.YeniRekor = false;
         ziplamaTusuBasili = false;
         oyunAlani.Focus();
     }
@@ -139,8 +155,26 @@ public partial class MainForm : Form
         DurumuGoster();
     }
 
+    private void Motor_OyunBitti(object? sender, EventArgs e)
+    {
+        bool yeniRekor = rekorDeposu.YeniSkoruDene(motor.Zorluk, motor.Skor);
+        oyunAlani.YeniRekor = yeniRekor;
+        BilgileriGuncelle();
+
+        if (yeniRekor)
+            SystemSounds.Asterisk.Play();
+        else
+            SystemSounds.Hand.Play();
+
+        if (rekorDeposu.SonHata is not null)
+            lblDurum.Text = rekorDeposu.SonHata;
+    }
+
     private void BilgileriGuncelle()
     {
+        int rekor = rekorDeposu.RekorGetir(motor.Zorluk);
+        oyunAlani.Rekor = rekor;
+        lblRekor.Text = $"Rekor: {rekor}";
         lblSkor.Text = $"Skor: {motor.Skor}";
         lblHiz.Text = $"Hız: {motor.Hiz:0.0}";
         lblSeviye.Text = $"Seviye: {motor.Seviye}";

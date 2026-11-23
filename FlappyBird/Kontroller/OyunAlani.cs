@@ -48,6 +48,10 @@ public class OyunAlani : Control
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public int Rekor { get; set; }
 
+    [Browsable(false)]
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool YeniRekor { get; set; }
+
     // Ok tuşları ve boşluk normalde form tarafından "gezinme" için yutuluyor
     protected override bool IsInputKey(Keys keyData)
     {
@@ -212,18 +216,20 @@ public class OyunAlani : Control
                 break;
 
             case OyunDurumu.Duraklatildi:
-                Panel(g, new RectangleF(110, 250, 260, 90));
-                GolgeliYazi(g, "DURAKLATILDI", baslikFontu, new RectangleF(110, 260, 260, 45), ortala);
-                GolgeliYazi(g, "Devam etmek için P", bilgiFontu, new RectangleF(110, 305, 260, 30), ortala);
+                Panel(g, new RectangleF(70, 250, 340, 95));
+                GolgeliYazi(g, "DURAKLATILDI", baslikFontu, new RectangleF(70, 262, 340, 45), ortala);
+                GolgeliYazi(g, "Devam etmek için P", bilgiFontu, new RectangleF(70, 307, 340, 30), ortala);
                 break;
 
             case OyunDurumu.Bitti:
-                Panel(g, new RectangleF(60, 170, 360, 200));
-                GolgeliYazi(g, "GAME OVER", baslikFontu, new RectangleF(60, 185, 360, 50), ortala);
+                Panel(g, new RectangleF(60, 160, 360, 230));
+                GolgeliYazi(g, "GAME OVER", baslikFontu, new RectangleF(60, 175, 360, 50), ortala);
+                if (YeniRekor)
+                    GolgeliYazi(g, "YENİ REKOR!", bilgiFontu, new RectangleF(60, 225, 360, 25), ortala);
                 string sonuc = $"Skor: {motor.Skor}      Rekor: {Math.Max(Rekor, motor.Skor)}\n" +
                                $"Seviye: {motor.Seviye}   Zorluk: {motor.Zorluk}";
-                GolgeliYazi(g, sonuc, bilgiFontu, new RectangleF(60, 245, 360, 60), ortala);
-                GolgeliYazi(g, "Yeniden oynamak için R veya Enter", bilgiFontu, new RectangleF(60, 320, 360, 30), ortala);
+                GolgeliYazi(g, sonuc, bilgiFontu, new RectangleF(60, 262, 360, 60), ortala);
+                GolgeliYazi(g, "Yeniden oynamak için R veya Enter", bilgiFontu, new RectangleF(60, 340, 360, 30), ortala);
                 break;
         }
     }
