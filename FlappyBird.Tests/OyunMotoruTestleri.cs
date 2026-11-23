@@ -232,6 +232,26 @@ public class OyunMotoruTestleri
     }
 
     [Fact]
+    public void AlinanYol_OyundaHizKadarArtar_BitinceDurur()
+    {
+        var motor = new OyunMotoru(ZorlukSeviyesi.Normal, Tohum);
+        motor.KanatCirp();
+        float once = motor.AlinanYol;
+
+        motor.Ilerle();
+        Assert.Equal(once + motor.Hiz, motor.AlinanYol, 3);
+
+        for (int i = 0; i < 500; i++)
+            motor.Ilerle();
+        float bitince = motor.AlinanYol;
+        for (int i = 0; i < 50; i++)
+            motor.Ilerle();
+
+        Assert.Equal(OyunDurumu.Bitti, motor.Durum);
+        Assert.Equal(bitince, motor.AlinanYol);
+    }
+
+    [Fact]
     public void AyniTohum_AyniBoruDiziliminiUretir()
     {
         var a = new OyunMotoru(ZorlukSeviyesi.Normal, 7);

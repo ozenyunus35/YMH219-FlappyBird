@@ -32,6 +32,9 @@ public class OyunMotoru
     // Kanat animasyonu ve kayan zemin için tick sayacı
     public long TickSayisi { get; private set; }
 
+    // Arka planın ne kadar kaydığı (paralaks çizimi için). Oyun bitince artmıyor.
+    public float AlinanYol { get; private set; }
+
     public float ZeminY => AlanYuksekligi - ZeminYuksekligi;
 
     // Duraklatmadan dönünce kalan geri sayım (tick cinsinden)
@@ -124,6 +127,10 @@ public class OyunMotoru
 
         TickSayisi++;
 
+        // Başlangıç ekranında manzara yavaşça akıyor
+        if (Durum == OyunDurumu.Hazir)
+            AlinanYol += 1.5f;
+
         if (Durum == OyunDurumu.GeriSayim)
         {
             GeriSayimKalan--;
@@ -136,6 +143,7 @@ public class OyunMotoru
             return;
 
         Kus.Guncelle(ayar.YerCekimi);
+        AlinanYol += Hiz;
 
         foreach (var boru in borular)
             boru.Kaydir(Hiz);
