@@ -53,12 +53,14 @@ Visual Studio'da: *Test → Run All Tests*.
 | Tuş | İşlev |
 |-----|-------|
 | `Boşluk` / `↑` / `W` / sol tık | Zıpla (oyunu başlatır) |
-| `P` / `Esc` | Duraklat / devam et |
+| `P` / `Esc` | Duraklat / devam et (duraklatılmışken tıklamak da devam ettirir) |
 | `R` | Yeni oyun |
-| `M` | Ses efektlerini aç / kapat |
-| `Enter` | Oyun bittiyse yeniden başla |
+| `M` | Ses efektlerini aç / kapat (durum çubuğundaki "Ses" yazısına tıklamak da olur) |
+| `Enter` / sol tık | Oyun bittiyse yeniden başla |
+| `1` / `2` / `3` | Zorluk: Kolay / Normal / Zor |
 
 Üst çubuktaki **Kolay / Normal / Zor** seçicisi, **Yeni** ve **⏸** butonları da aynı işleri yapıyor (üzerine gelince ipucu çıkıyor).
+Oyun sürerken zorluk değiştirilirse skor kaybolacağı için önce onay soruluyor.
 
 ## Özellikler
 

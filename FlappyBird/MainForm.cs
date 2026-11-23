@@ -46,7 +46,19 @@ public partial class MainForm : Form
         var ipucu = new ToolTip(components);
         ipucu.SetToolTip(btnYeniOyun, "Yeni oyun (R)");
         ipucu.SetToolTip(btnDuraklat, "Duraklat / devam (P)");
-        ipucu.SetToolTip(zorlukSecici, "Zorluk seviyesi");
+        ipucu.SetToolTip(zorlukSecici, "Zorluk seviyesi (klavyede 1 / 2 / 3)");
+
+        // Ses durumu durum çubuğundan tıklanarak da değiştirilebiliyor
+        lblSes.ToolTipText = "Sesi aç / kapat (M)";
+        lblSes.BorderSides = ToolStripStatusLabelBorderSides.Left;
+        lblSes.BorderStyle = Border3DStyle.Etched;
+        lblSes.Click += (_, _) => { SesiDegistir(); oyunAlani.Focus(); };
+        Load += (_, _) => ActiveControl = oyunAlani;
+
+        // Fareyle butona basıp dışarı sürükleyince odak butonda kalıyordu; sonra Boşluk hem zıplatıp
+        // hem butona "tıklıyordu" (oyun duruyor / yeniden başlıyordu). Buton odak alırsa oyun alanına geri veriliyor.
+        btnYeniOyun.GotFocus += (_, _) => BeginInvoke(() => oyunAlani.Focus());
+        btnDuraklat.GotFocus += (_, _) => BeginInvoke(() => oyunAlani.Focus());
 
         oyunAlani.Motor = motor;
 
@@ -139,8 +151,20 @@ public partial class MainForm : Form
                 break;
 
             case Keys.M:
-                sesAcik = !sesAcik;
-                lblSes.Text = sesAcik ? "Ses: Açık (M)" : "Ses: Kapalı (M)";
+                SesiDegistir();
+                e.Handled = true;
+                break;
+
+            case Keys.D1: case Keys.NumPad1:
+                ZorlukDegistir(ZorlukSeviyesi.Kolay);
+                e.Handled = true;
+                break;
+            case Keys.D2: case Keys.NumPad2:
+                ZorlukDegistir(ZorlukSeviyesi.Normal);
+                e.Handled = true;
+                break;
+            case Keys.D3: case Keys.NumPad3:
+                ZorlukDegistir(ZorlukSeviyesi.Zor);
                 e.Handled = true;
                 break;
 
@@ -165,8 +189,79 @@ public partial class MainForm : Form
 
     private void oyunAlani_MouseDown(object? sender, MouseEventArgs e)
     {
-        if (e.Button == MouseButtons.Left)
-            motor.KanatCirp();
+        if (e.Button != MouseButtons.Left)
+            return;
+
+        // Fare ile de her şey yapılabilsin: duraklatılmışsa devam, oyun bittiyse yeniden başla
+        switch (motor.Durum)
+        {
+            case OyunDurumu.Duraklatildi:
+                motor.DuraklatVeyaDevamEt();
+                break;
+            case OyunDurumu.Bitti:
+                // Çarptığı anda panikle yapılan tıklama skor kartını hemen geçmesin
+                if (bitisZamani.ElapsedMilliseconds > 600)
+                    YeniOyunBaslat();
+                break;
+            default:
+                motor.KanatCirp();
+                break;
+        }
+    }
+
+    private readonly Stopwatch bitisZamani = new();
+
+    private void SesiDegistir()
+    {
+        sesAcik = !sesAcik;
+        lblSes.Text = sesAcik ? "Ses: Açık (M)" : "Ses: Kapalı (M)";
+        lblSes.ForeColor = sesAcik ? Color.DimGray : Color.FromArgb(200, 90, 30);
+    }
+
+    /// <summary>Oyun sürerken zorluk değişirse mevcut skor kaybolacağı için önce soruluyor.</summary>
+    private bool zorlukDegisiyor;
+
+    private void ZorlukDegistir(ZorlukSeviyesi yeni)
+    {
+        if (zorlukDegisiyor)
+            return;
+        zorlukDegisiyor = true;
+        try
+        {
+            ZorlukDegistirIc(yeni);
+        }
+        finally
+        {
+            zorlukDegisiyor = false;
+        }
+    }
+
+    private void ZorlukDegistirIc(ZorlukSeviyesi yeni)
+    {
+        if (yeni == motor.Zorluk)
+        {
+            zorlukSecici.Secili = yeni;
+            return;
+        }
+
+        bool oyunSuruyor = motor.Skor > 0 &&
+                           motor.Durum is OyunDurumu.Oynaniyor or OyunDurumu.Duraklatildi or OyunDurumu.GeriSayim;
+        if (oyunSuruyor)
+        {
+            motor.Duraklat();
+            var cevap = MessageBox.Show(this, $"Zorluk değişirse {motor.Skor} puanlık oyun sıfırlanır. Devam edilsin mi?",
+                "Zorluk", MessageBoxButtons.YesNo, MessageBoxIcon.Question, MessageBoxDefaultButton.Button2);
+            if (cevap != DialogResult.Yes)
+            {
+                zorlukSecici.Secili = motor.Zorluk;
+                oyunAlani.Focus();
+                return;
+            }
+        }
+
+        zorlukSecici.Secili = yeni;
+        if (SeciliZorluk != motor.Zorluk)
+            YeniOyunBaslat();
     }
 
     // Başka pencereye geçilince oyun kendiliğinden dursun
@@ -201,8 +296,8 @@ public partial class MainForm : Form
         if (motor is null)
             return;
 
-        if (SeciliZorluk != motor.Zorluk)
-            YeniOyunBaslat();
+        if (!zorlukDegisiyor && SeciliZorluk != motor.Zorluk)
+            ZorlukDegistir(SeciliZorluk);
 
         oyunAlani.Focus();
     }
@@ -221,6 +316,7 @@ public partial class MainForm : Form
 
     private void Motor_OyunBitti(object? sender, EventArgs e)
     {
+        bitisZamani.Restart();
         bool yeniRekor = rekorDeposu.YeniSkoruDene(motor.Zorluk, motor.Skor);
         oyunAlani.YeniRekor = yeniRekor;
         BilgileriGuncelle();
@@ -251,11 +347,11 @@ public partial class MainForm : Form
     {
         lblDurum.Text = motor.Durum switch
         {
-            OyunDurumu.Hazir => "Hazır - başlamak için Boşluk tuşuna bas",
-            OyunDurumu.Oynaniyor => "Oyun devam ediyor",
-            OyunDurumu.Duraklatildi => "Duraklatıldı (P ile devam)",
+            OyunDurumu.Hazir => "Hazır - Boşluk veya tıkla · zorluk: 1 / 2 / 3",
+            OyunDurumu.Oynaniyor => "Oyun devam ediyor · P: duraklat",
+            OyunDurumu.Duraklatildi => "Duraklatıldı - P veya tıkla: devam",
             OyunDurumu.GeriSayim => "Oyun birazdan devam edecek...",
-            OyunDurumu.Bitti => "Oyun bitti - R / Enter ile yeniden başla",
+            OyunDurumu.Bitti => "Oyun bitti - R, Enter veya tıkla: yeniden başla",
             _ => ""
         };
 

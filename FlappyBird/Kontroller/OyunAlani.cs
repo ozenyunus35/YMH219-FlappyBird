@@ -19,9 +19,9 @@ public class OyunAlani : Control
     private static readonly Color BoruKoyu = Color.FromArgb(20, 104, 92);
     private static readonly Color BoruKenar = Color.FromArgb(14, 60, 54);
 
-    private readonly Font bilgiFontu = new("Segoe UI", 12, FontStyle.Regular);
-    private readonly Font kucukFont = new("Segoe UI", 10, FontStyle.Bold);
-    private readonly Font soruFontu = new("Segoe UI", 22, FontStyle.Bold);
+    private readonly Font bilgiFontu = new("Segoe UI", 16f, FontStyle.Regular, GraphicsUnit.Pixel);
+    private readonly Font kucukFont = new("Segoe UI", 13.33f, FontStyle.Bold, GraphicsUnit.Pixel);
+    private readonly Font soruFontu = new("Segoe UI", 29.33f, FontStyle.Bold, GraphicsUnit.Pixel);
 
     private readonly PointF[] bulutlar = { new(40, 110), new(210, 170), new(360, 90), new(520, 150) };
     private readonly PointF[] yildizlar;
@@ -134,8 +134,12 @@ public class OyunAlani : Control
         g.SmoothingMode = SmoothingMode.AntiAlias;
         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
 
-        // Oyun 480x640 mantıksal alanda çalışıyor, kontrol boyutuna ölçekliyoruz
-        g.ScaleTransform(Width / (float)W, Height / (float)H);
+        // Oyun 480x640 mantıksal alanda çalışıyor. Farklı DPI'larda en-boy oranı biraz kayabildiği için
+        // iki eksende aynı ölçek kullanılıp alan ortalanıyor (kuş ve güneş ovalleşmesin)
+        g.Clear(Color.FromArgb(28, 22, 66));
+        float olcek = Math.Min(Width / (float)W, Height / (float)H);
+        g.TranslateTransform((Width - W * olcek) / 2f, (Height - H * olcek) / 2f);
+        g.ScaleTransform(olcek, olcek);
 
         long tick = motor?.TickSayisi ?? 0;
 
@@ -417,7 +421,7 @@ public class OyunAlani : Control
                 Cizim.Kart(g, new RectangleF(80, 240, 320, 120));
                 Cizim.KenarliYazi(g, "DURAKLATILDI", 32, new PointF(W / 2f, 282), Color.FromArgb(255, 200, 80), Color.FromArgb(250, 140, 40));
                 using (var f = new SolidBrush(Color.FromArgb(110, 70, 50)))
-                    g.DrawString("Devam etmek için P", bilgiFontu, f, new RectangleF(80, 312, 320, 30), Ortala);
+                    g.DrawString("Devam etmek için P veya tıkla", bilgiFontu, f, new RectangleF(80, 312, 320, 30), Ortala);
                 break;
 
             case OyunDurumu.GeriSayim:
@@ -466,7 +470,7 @@ public class OyunAlani : Control
         {
             g.DrawString("EN İYİ", kucukFont, koyu, new RectangleF(kart.X, kart.Y + 12, kart.Width / 2, 20), Ortala);
             g.DrawString("ZORLUK", kucukFont, koyu, new RectangleF(kart.X + kart.Width / 2, kart.Y + 12, kart.Width / 2, 20), Ortala);
-            using var buyuk = new Font("Segoe UI", 20, FontStyle.Bold);
+            using var buyuk = new Font("Segoe UI", 26.67f, FontStyle.Bold, GraphicsUnit.Pixel);
             g.DrawString(Rekor.ToString(), buyuk, vurgu, new RectangleF(kart.X, kart.Y + 30, kart.Width / 2, 38), Ortala);
             g.DrawString(motor.Zorluk.ToString().ToUpperInvariant(), buyuk, vurgu, new RectangleF(kart.X + kart.Width / 2, kart.Y + 30, kart.Width / 2, 38), Ortala);
         }
@@ -484,7 +488,7 @@ public class OyunAlani : Control
 
         // Yanıp sönen başlama yazısı
         int alfa = (int)(215 + 40 * Math.Sin(tick / 9.0));
-        Cizim.KenarliYazi(g, "Başlamak için BOŞLUK tuşuna bas", 19, new PointF(W / 2f, 352), Color.White, null, null, 5, FontStyle.Bold, alfa);
+        Cizim.KenarliYazi(g, "BOŞLUK tuşuna bas veya tıkla", 19, new PointF(W / 2f, 352), Color.White, null, null, 5, FontStyle.Bold, alfa);
     }
 
     private void OyunSonuEkrani(Graphics g, OyunMotoru motor, long bitistenBeri)
@@ -505,7 +509,7 @@ public class OyunAlani : Control
 
         using var koyu = new SolidBrush(Color.FromArgb(110, 70, 50));
         using var vurgu = new SolidBrush(Color.FromArgb(236, 120, 40));
-        using var buyuk = new Font("Segoe UI", 26, FontStyle.Bold);
+        using var buyuk = new Font("Segoe UI", 34.67f, FontStyle.Bold, GraphicsUnit.Pixel);
 
         // Sol: madalya
         g.DrawString("MADALYA", kucukFont, koyu, new RectangleF(kart.X + 16, kart.Y + 16, 130, 20), Ortala);
@@ -532,7 +536,7 @@ public class OyunAlani : Control
         g.DrawString($"Seviye {motor.Seviye}  ·  {motor.Zorluk}", kucukFont, koyu, new RectangleF(sx, kart.Y + 156, 170, 20), Ortala);
 
         int alfa = (int)(215 + 40 * Math.Sin(bitistenBeri / 9.0));
-        Cizim.KenarliYazi(g, "Tekrar oynamak için R veya Enter", 19, new PointF(W / 2f, 440), Color.White, null, null, 5, FontStyle.Bold, alfa);
+        Cizim.KenarliYazi(g, "Tekrar: R, Enter veya tıkla", 19, new PointF(W / 2f, 440), Color.White, null, null, 5, FontStyle.Bold, alfa);
     }
 
     private void MadalyaCiz(Graphics g, Madalya madalya, PointF merkez)
