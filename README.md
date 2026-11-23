@@ -3,8 +3,8 @@
 [![Derleme ve Testler](https://github.com/ozenyunus35/YMH219-FlappyBird/actions/workflows/build.yml/badge.svg)](https://github.com/ozenyunus35/YMH219-FlappyBird/actions/workflows/build.yml)
 
 Nesne Tabanlı Programlama (YMH 219) dersi ek uygulama ödevi.
-Windows Forms ile yazılmış, gün batımı temalı basit bir Flappy Bird benzeri oyun.
-Kuş, borular, zemin ve arka plan tamamen kodla (GDI+) çiziliyor, projede hiç resim dosyası yok.
+Windows Forms ile yazılmış, gün batımı temalı bir Flappy Bird benzeri oyun.
+Kuş, borular, şehir silueti, madalyalar ve tüm arayüz tamamen kodla (GDI+) çiziliyor; projede ikon dışında hiç resim dosyası yok.
 
 <p align="center">
   <img src="docs/oynanis.gif" width="300" alt="Oynanış">
@@ -58,7 +58,7 @@ Visual Studio'da: *Test → Run All Tests*.
 | `M` | Ses efektlerini aç / kapat |
 | `Enter` | Oyun bittiyse yeniden başla |
 
-Üst paneldeki **Yeni Oyun** ve **Duraklat** butonları ve zorluk seçimi de aynı işleri yapıyor.
+Üst çubuktaki **Kolay / Normal / Zor** seçicisi, **Yeni** ve **⏸** butonları da aynı işleri yapıyor (üzerine gelince ipucu çıkıyor).
 
 ## Özellikler
 
@@ -74,11 +74,17 @@ Visual Studio'da: *Test → Run All Tests*.
 
 **Ek özellikler (ödevde istenenlerin dışında)**
 
+- Logolu **açılış ekranı** (en iyi skor, seçili zorluk ve tuş ipuçları ile)
+- Katmanlı **paralaks manzara**: yıldızlar, tepeler, ışıkları yanan şehir silueti, bulutlar
+- Skor alınca **+1** efekti, çarpınca beyaz **flaş** ve kısa **ekran sarsıntısı**
+- Özel çizilmiş arayüz kontrolleri: zorluk seçici (`ZorlukSecici`) ve ikonlu butonlar (`OyunButonu`)
+- Uygulama ikonu
+
 - Duraklatmadan dönünce 3-2-1 **geri sayım**, oyuncu hazırlanmadan oyun başlamıyor
 - Skora göre **madalya**: 10 puan bronz, 20 puan gümüş, 40 puan altın
 - **Sabit zaman adımı**: oyun hızı bilgisayarın hızından ve timer gecikmesinden bağımsız (saniyede 60 adım)
 - Bozuk rekor dosyasına karşı koruma (hatalı satırlar atlanıyor)
-- 40 adet otomatik birim testi
+- 41 adet otomatik birim testi
 
 ## Proje Yapısı
 
@@ -87,12 +93,15 @@ FlappyBird/
 ├── Program.cs
 ├── MainForm.cs / MainForm.Designer.cs   -> form, butonlar, klavye olayları
 ├── Kontroller/
-│   └── OyunAlani.cs        -> oyunun çizildiği özel kontrol (OnPaint)
+│   ├── OyunAlani.cs        -> oyunun çizildiği özel kontrol (OnPaint)
+│   ├── Cizim.cs            -> kenarlı yazı, kart, tuş gibi çizim yardımcıları
+│   ├── ZorlukSecici.cs     -> Kolay/Normal/Zor seçici (ComboBox yerine)
+│   └── OyunButonu.cs       -> ikonlu, yuvarlak buton (Button'dan türetildi)
 ├── Oyun/
 │   ├── Kus.cs              -> konum, dikey hız, zıplama, yer çekimi
 │   ├── Boru.cs             -> üst/alt parça, kayma, yeniden konumlanma
 │   ├── OyunMotoru.cs       -> skor, hız, çarpışma, oyun durumu
-│   ├── OyunDurumu.cs       -> Hazir / Oynaniyor / Duraklatildi / Bitti
+│   ├── OyunDurumu.cs       -> Hazir / Oynaniyor / Duraklatildi / GeriSayim / Bitti
 │   ├── Zorluk.cs           -> zorluk seviyeleri ve ayarları
 │   └── Madalya.cs          -> skora göre madalya hesabı
 └── Veri/
