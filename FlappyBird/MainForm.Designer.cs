@@ -176,7 +176,7 @@ partial class MainForm
         //
         // oyunZamanlayici
         //
-        oyunZamanlayici.Interval = 16;
+        oyunZamanlayici.Interval = 15;
         oyunZamanlayici.Tick += oyunZamanlayici_Tick;
         //
         // MainForm

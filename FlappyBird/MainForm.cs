@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Media;
 using FlappyBird.Oyun;
 using FlappyBird.Veri;
@@ -12,6 +13,13 @@ public partial class MainForm : Form
     // Tuşa basılı tutunca sürekli zıplamasın diye (KeyDown tekrar tekrar geliyor)
     private bool ziplamaTusuBasili;
     private bool sesAcik = true;
+
+    // Sabit zaman adımı: oyun saniyede 60 adım ilerliyor.
+    // WinForms Timer'ı Windows'ta tam 16 ms'de tetiklenmiyor (bazen ~31 ms),
+    // bu yüzden geçen gerçek süreyi ölçüp o kadar adım çalıştırıyoruz.
+    private const double AdimSuresiMs = 1000.0 / 60;
+    private readonly Stopwatch saat = new();
+    private double birikenSureMs;
 
     public MainForm()
     {
@@ -30,6 +38,7 @@ public partial class MainForm : Form
 
         BilgileriGuncelle();
         DurumuGoster();
+        saat.Start();
         oyunZamanlayici.Start();
     }
 
@@ -59,7 +68,19 @@ public partial class MainForm : Form
 
     private void oyunZamanlayici_Tick(object? sender, EventArgs e)
     {
-        motor.Ilerle();
+        birikenSureMs += saat.Elapsed.TotalMilliseconds;
+        saat.Restart();
+
+        // Pencere sürüklenirken vs. uzun süre tick gelmezse oyun bir anda ileri sarmasın
+        if (birikenSureMs > 250)
+            birikenSureMs = 250;
+
+        while (birikenSureMs >= AdimSuresiMs)
+        {
+            motor.Ilerle();
+            birikenSureMs -= AdimSuresiMs;
+        }
+
         oyunAlani.Invalidate();
     }
 
