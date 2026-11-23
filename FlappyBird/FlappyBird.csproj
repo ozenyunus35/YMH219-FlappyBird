@@ -12,6 +12,9 @@
     <RollForward>Major</RollForward>
     <!-- Windows dışı makinelerde de derleme hatası vermesin -->
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <Product>Flappy Bird - YMH219</Product>
+    <Version>1.1.0</Version>
   </PropertyGroup>
 
 </Project>
