@@ -25,9 +25,9 @@ partial class MainForm
     {
         components = new System.ComponentModel.Container();
         ustPanel = new Panel();
-        btnDuraklat = new Button();
-        btnYeniOyun = new Button();
-        cmbZorluk = new ComboBox();
+        btnDuraklat = new Kontroller.OyunButonu();
+        btnYeniOyun = new Kontroller.OyunButonu();
+        zorlukSecici = new Kontroller.ZorlukSecici();
         lblSeviye = new Label();
         lblHiz = new Label();
         lblRekor = new Label();
@@ -46,7 +46,7 @@ partial class MainForm
         ustPanel.BackColor = Color.FromArgb(28, 24, 52);
         ustPanel.Controls.Add(btnDuraklat);
         ustPanel.Controls.Add(btnYeniOyun);
-        ustPanel.Controls.Add(cmbZorluk);
+        ustPanel.Controls.Add(zorlukSecici);
         ustPanel.Controls.Add(lblSeviye);
         ustPanel.Controls.Add(lblHiz);
         ustPanel.Controls.Add(lblRekor);
@@ -56,55 +56,44 @@ partial class MainForm
         ustPanel.Name = "ustPanel";
         ustPanel.Size = new Size(420, 52);
         ustPanel.TabIndex = 0;
-        //
+        // 
         // btnDuraklat
-        //
-        btnDuraklat.BackColor = Color.FromArgb(60, 52, 104);
+        // 
         btnDuraklat.Enabled = false;
-        btnDuraklat.FlatAppearance.BorderColor = Color.FromArgb(247, 146, 86);
-        btnDuraklat.FlatStyle = FlatStyle.Flat;
-        btnDuraklat.ForeColor = Color.White;
-        btnDuraklat.Location = new Point(340, 12);
+        btnDuraklat.Ikon = Kontroller.ButonIkonu.Duraklat;
+        btnDuraklat.Location = new Point(372, 12);
         btnDuraklat.Name = "btnDuraklat";
-        btnDuraklat.Size = new Size(72, 28);
+        btnDuraklat.SadeceIkon = true;
+        btnDuraklat.Size = new Size(38, 28);
         btnDuraklat.TabIndex = 6;
-        btnDuraklat.TabStop = false;
         btnDuraklat.Text = "Duraklat";
-        btnDuraklat.UseVisualStyleBackColor = false;
         btnDuraklat.Click += btnDuraklat_Click;
-        //
+        // 
         // btnYeniOyun
-        //
-        btnYeniOyun.BackColor = Color.FromArgb(247, 146, 86);
-        btnYeniOyun.FlatAppearance.BorderSize = 0;
-        btnYeniOyun.FlatStyle = FlatStyle.Flat;
+        // 
         btnYeniOyun.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-        btnYeniOyun.ForeColor = Color.FromArgb(28, 24, 52);
-        btnYeniOyun.Location = new Point(258, 12);
+        btnYeniOyun.Ikon = Kontroller.ButonIkonu.Yenile;
+        btnYeniOyun.Location = new Point(304, 12);
         btnYeniOyun.Name = "btnYeniOyun";
-        btnYeniOyun.Size = new Size(78, 28);
+        btnYeniOyun.Size = new Size(62, 28);
         btnYeniOyun.TabIndex = 5;
-        btnYeniOyun.TabStop = false;
-        btnYeniOyun.Text = "Yeni Oyun";
-        btnYeniOyun.UseVisualStyleBackColor = false;
+        btnYeniOyun.Text = "Yeni";
+        btnYeniOyun.Vurgulu = true;
         btnYeniOyun.Click += btnYeniOyun_Click;
-        //
-        // cmbZorluk
-        //
-        cmbZorluk.DropDownStyle = ComboBoxStyle.DropDownList;
-        cmbZorluk.FormattingEnabled = true;
-        cmbZorluk.Location = new Point(180, 15);
-        cmbZorluk.Name = "cmbZorluk";
-        cmbZorluk.Size = new Size(72, 23);
-        cmbZorluk.TabIndex = 4;
-        cmbZorluk.TabStop = false;
-        cmbZorluk.SelectedIndexChanged += cmbZorluk_SelectedIndexChanged;
+        // 
+        // zorlukSecici
+        // 
+        zorlukSecici.Location = new Point(150, 12);
+        zorlukSecici.Name = "zorlukSecici";
+        zorlukSecici.Size = new Size(148, 28);
+        zorlukSecici.TabIndex = 4;
+        zorlukSecici.SecimDegisti += zorlukSecici_SecimDegisti;
         //
         // lblSeviye
         //
         lblSeviye.AutoSize = true;
         lblSeviye.ForeColor = Color.FromArgb(200, 196, 230);
-        lblSeviye.Location = new Point(95, 28);
+        lblSeviye.Location = new Point(82, 28);
         lblSeviye.Name = "lblSeviye";
         lblSeviye.Size = new Size(52, 15);
         lblSeviye.TabIndex = 3;
@@ -114,7 +103,7 @@ partial class MainForm
         //
         lblHiz.AutoSize = true;
         lblHiz.ForeColor = Color.FromArgb(200, 196, 230);
-        lblHiz.Location = new Point(95, 8);
+        lblHiz.Location = new Point(82, 8);
         lblHiz.Name = "lblHiz";
         lblHiz.Size = new Size(46, 15);
         lblHiz.TabIndex = 2;
@@ -211,9 +200,9 @@ partial class MainForm
     private Label lblRekor;
     private Label lblHiz;
     private Label lblSeviye;
-    private ComboBox cmbZorluk;
-    private Button btnYeniOyun;
-    private Button btnDuraklat;
+    private Kontroller.ZorlukSecici zorlukSecici;
+    private Kontroller.OyunButonu btnYeniOyun;
+    private Kontroller.OyunButonu btnDuraklat;
     private Kontroller.OyunAlani oyunAlani;
     private StatusStrip durumCubugu;
     private ToolStripStatusLabel lblDurum;

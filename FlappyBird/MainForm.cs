@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Media;
+using FlappyBird.Kontroller;
 using FlappyBird.Oyun;
 using FlappyBird.Veri;
 
@@ -30,9 +31,22 @@ public partial class MainForm : Form
         motor.DurumDegisti += Motor_DurumDegisti;
         motor.OyunBitti += Motor_OyunBitti;
 
-        foreach (ZorlukSeviyesi seviye in Enum.GetValues<ZorlukSeviyesi>())
-            cmbZorluk.Items.Add(seviye);
-        cmbZorluk.SelectedItem = ZorlukSeviyesi.Normal;
+        zorlukSecici.Secili = ZorlukSeviyesi.Normal;
+
+        try
+        {
+            Icon = Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+        }
+        catch (Exception)
+        {
+            // ikon okunamazsa varsayılan ikon kalsın
+        }
+
+        components ??= new System.ComponentModel.Container();
+        var ipucu = new ToolTip(components);
+        ipucu.SetToolTip(btnYeniOyun, "Yeni oyun (R)");
+        ipucu.SetToolTip(btnDuraklat, "Duraklat / devam (P)");
+        ipucu.SetToolTip(zorlukSecici, "Zorluk seviyesi");
 
         oyunAlani.Motor = motor;
 
@@ -53,8 +67,7 @@ public partial class MainForm : Form
         }
     }
 
-    private ZorlukSeviyesi SeciliZorluk =>
-        cmbZorluk.SelectedItem is ZorlukSeviyesi seviye ? seviye : ZorlukSeviyesi.Normal;
+    private ZorlukSeviyesi SeciliZorluk => zorlukSecici.Secili;
 
     private void YeniOyunBaslat()
     {
@@ -158,9 +171,9 @@ public partial class MainForm : Form
         oyunAlani.Focus();
     }
 
-    private void cmbZorluk_SelectedIndexChanged(object? sender, EventArgs e)
+    private void zorlukSecici_SecimDegisti(object? sender, EventArgs e)
     {
-        // Constructor içinde Items doldurulurken de tetikleniyor, motor henüz yoksa geç
+        // Motor henüz oluşturulmadıysa (constructor sırasında) bir şey yapma
         if (motor is null)
             return;
 
@@ -224,5 +237,6 @@ public partial class MainForm : Form
 
         btnDuraklat.Enabled = motor.Durum is OyunDurumu.Oynaniyor or OyunDurumu.Duraklatildi or OyunDurumu.GeriSayim;
         btnDuraklat.Text = motor.Durum == OyunDurumu.Duraklatildi ? "Devam" : "Duraklat";
+        btnDuraklat.Ikon = motor.Durum == OyunDurumu.Duraklatildi ? ButonIkonu.Oynat : ButonIkonu.Duraklat;
     }
 }
