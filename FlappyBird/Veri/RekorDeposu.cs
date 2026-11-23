@@ -46,27 +46,40 @@ public class RekorDeposu
     {
         try
         {
-            if (!File.Exists(dosyaYolu))
-                return;
-
-            foreach (string satir in File.ReadAllLines(dosyaYolu))
-            {
-                string[] parcalar = satir.Split('=');
-                if (parcalar.Length != 2)
-                    continue;
-
-                // Dosya elle bozulduysa o satırı atla, program çökmesin
-                if (Enum.TryParse(parcalar[0].Trim(), out ZorlukSeviyesi seviye) &&
-                    int.TryParse(parcalar[1].Trim(), out int skor) && skor >= 0)
-                {
-                    rekorlar[seviye] = skor;
-                }
-            }
+            foreach (var (seviye, skor) in DosyadanOku())
+                rekorlar[seviye] = skor;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             SonHata = "Rekor dosyası okunamadı: " + ex.Message;
         }
+    }
+
+    /// <summary>Dosyadaki geçerli satırlar. Aynı seviye birden çok kez geçerse büyük olan alınır.</summary>
+    private Dictionary<ZorlukSeviyesi, int> DosyadanOku()
+    {
+        var sonuc = new Dictionary<ZorlukSeviyesi, int>();
+        if (!File.Exists(dosyaYolu))
+            return sonuc;
+
+        foreach (string satir in File.ReadAllLines(dosyaYolu))
+        {
+            string[] parcalar = satir.Split('=');
+            if (parcalar.Length != 2)
+                continue;
+
+            // Dosya elle bozulduysa o satırı atla, program çökmesin.
+            // "9=5" gibi sayısal ya da "Kolay, Zor" gibi birleşik değerler de geçersiz sayılıyor.
+            string ad = parcalar[0].Trim();
+            if (ad.Length > 0 && char.IsLetter(ad[0]) && !ad.Contains(',') &&
+                Enum.TryParse(ad, ignoreCase: true, out ZorlukSeviyesi seviye) && Enum.IsDefined(seviye) &&
+                int.TryParse(parcalar[1].Trim(), System.Globalization.NumberStyles.Integer,
+                             System.Globalization.CultureInfo.InvariantCulture, out int skor) && skor >= 0)
+            {
+                sonuc[seviye] = Math.Max(skor, sonuc.GetValueOrDefault(seviye));
+            }
+        }
+        return sonuc;
     }
 
     private void Kaydet()
@@ -75,9 +88,16 @@ public class RekorDeposu
         {
             Directory.CreateDirectory(Path.GetDirectoryName(dosyaYolu)!);
 
-            using var yazici = new StreamWriter(dosyaYolu, append: false);
-            foreach (var (seviye, skor) in rekorlar)
-                yazici.WriteLine($"{seviye}={skor}");
+            // Aynı anda açık başka bir oyun penceresi de rekor yazmış olabilir:
+            // dosyadakiyle birleştirip her seviye için büyük olanı yazıyoruz.
+            foreach (var (seviye, skor) in DosyadanOku())
+                if (skor > RekorGetir(seviye))
+                    rekorlar[seviye] = skor;
+
+            // Önce geçici dosyaya yazılıyor; yazarken bir şey olursa eski rekorlar kaybolmasın
+            string gecici = dosyaYolu + ".tmp";
+            File.WriteAllLines(gecici, rekorlar.OrderBy(r => r.Key).Select(r => $"{r.Key}={r.Value}"));
+            File.Move(gecici, dosyaYolu, overwrite: true);
 
             SonHata = null;
         }

@@ -73,18 +73,36 @@ public partial class MainForm : Form
     {
         motor.YeniOyun(SeciliZorluk);
         oyunAlani.YeniRekor = false;
-        ziplamaTusuBasili = false;
+        // Boşluk basılı tutulurken R'ye basılırsa yeni oyun tuş tekrarıyla kendiliğinden başlamasın:
+        // bayrak gerçek tuş durumuna göre ayarlanıyor
+        ziplamaTusuBasili = ZiplamaTusuBasiliMi();
         oyunAlani.Focus();
     }
+
+    [System.Runtime.InteropServices.DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int vKey);
+
+    private static bool ZiplamaTusuBasiliMi() =>
+        new[] { Keys.Space, Keys.Up, Keys.W }.Any(k => (GetAsyncKeyState((int)k) & 0x8000) != 0);
 
     // ---------- Oyun döngüsü ----------
 
     private void oyunZamanlayici_Tick(object? sender, EventArgs e)
     {
-        birikenSureMs += saat.Elapsed.TotalMilliseconds;
+        double gecen = saat.Elapsed.TotalMilliseconds;
         saat.Restart();
 
-        // Pencere sürüklenirken vs. uzun süre tick gelmezse oyun bir anda ileri sarmasın
+        // Pencere sürüklenirken vs. uzun süre tick gelmezse oyun bir anda ileri sarıp oyuncuyu
+        // haksız yere öldürmesin: oyun duraklatılıyor, devam edince 3-2-1 geri sayım var
+        if (gecen > 400 && motor.Durum == OyunDurumu.Oynaniyor)
+        {
+            motor.Duraklat();
+            birikenSureMs = 0;
+            oyunAlani.Invalidate();
+            return;
+        }
+
+        birikenSureMs += gecen;
         if (birikenSureMs > 250)
             birikenSureMs = 250;
 
@@ -154,8 +172,14 @@ public partial class MainForm : Form
     // Başka pencereye geçilince oyun kendiliğinden dursun
     private void MainForm_Deactivate(object? sender, EventArgs e)
     {
-        ziplamaTusuBasili = false;
         motor.Duraklat();
+    }
+
+    // Geri dönünce: başka pencerede bırakılan tuşun KeyUp'ı bize gelmemiş olabilir
+    protected override void OnActivated(EventArgs e)
+    {
+        base.OnActivated(e);
+        ziplamaTusuBasili = ZiplamaTusuBasiliMi();
     }
 
     // ---------- Butonlar ----------

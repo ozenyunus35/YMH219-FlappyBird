@@ -103,4 +103,54 @@ public class RekorDeposuTestleri : IDisposable
         Assert.NotNull(depo.SonHata);
         Assert.Equal(5, depo.RekorGetir(ZorlukSeviyesi.Normal)); // bu oturumda yine geçerli
     }
+
+    [Fact]
+    public void IkiPencere_BirbirininRekorunuEzmez()
+    {
+        var a = new RekorDeposu(klasor);
+        var b = new RekorDeposu(klasor);
+
+        a.YeniSkoruDene(ZorlukSeviyesi.Normal, 20);
+        b.YeniSkoruDene(ZorlukSeviyesi.Kolay, 3);
+
+        var yeniden = new RekorDeposu(klasor);
+        Assert.Equal(20, yeniden.RekorGetir(ZorlukSeviyesi.Normal));
+        Assert.Equal(3, yeniden.RekorGetir(ZorlukSeviyesi.Kolay));
+    }
+
+    [Fact]
+    public void TanimsizVeSayisalSeviyeSatirlari_Atlanir()
+    {
+        Directory.CreateDirectory(klasor);
+        File.WriteAllText(Path.Combine(klasor, "rekorlar.txt"), "9=5\n1=7\nKolay, Zor=7\n=4\n");
+
+        var depo = new RekorDeposu(klasor);
+
+        Assert.Equal(0, depo.RekorGetir(ZorlukSeviyesi.Kolay));
+        Assert.Equal(0, depo.RekorGetir(ZorlukSeviyesi.Normal));
+        Assert.Equal(0, depo.RekorGetir(ZorlukSeviyesi.Zor));
+
+        depo.YeniSkoruDene(ZorlukSeviyesi.Zor, 2);
+        string icerik = File.ReadAllText(Path.Combine(klasor, "rekorlar.txt"));
+        Assert.DoesNotContain("9=", icerik);
+    }
+
+    [Fact]
+    public void AyniSeviyeIkiKezGecerse_BuyukOlanAlinir()
+    {
+        Directory.CreateDirectory(klasor);
+        File.WriteAllText(Path.Combine(klasor, "rekorlar.txt"), "Normal=3\nNormal=2\n");
+
+        Assert.Equal(3, new RekorDeposu(klasor).RekorGetir(ZorlukSeviyesi.Normal));
+    }
+
+    [Fact]
+    public void KayittanSonra_GeciciDosyaKalmaz()
+    {
+        var depo = new RekorDeposu(klasor);
+        depo.YeniSkoruDene(ZorlukSeviyesi.Normal, 4);
+
+        Assert.Single(Directory.GetFiles(klasor));
+        Assert.Null(depo.SonHata);
+    }
 }

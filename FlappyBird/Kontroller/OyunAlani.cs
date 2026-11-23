@@ -126,6 +126,10 @@ public class OyunAlani : Control
 
     protected override void OnPaint(PaintEventArgs e)
     {
+        // Pencere küçültülünce boyut 0 olabiliyor; ölçekleme ve fırçalar hata vermesin
+        if (Width < 1 || Height < 1)
+            return;
+
         Graphics g = e.Graphics;
         g.SmoothingMode = SmoothingMode.AntiAlias;
         g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
